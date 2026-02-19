@@ -1,0 +1,33 @@
+
+# Python build artifacts
+dist/
+build/
+*.egg-info/
+*.tar.gz
+
+# PyPI auto-generated tarballs
+pkg/
+src/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Cache
+__pycache__/
+*.pyc
+
+# Editors / OS files
+.DS_Store
+*.swp
+*.swo
+
+# AUR packaging files (keep separate repo)
+PKGBUILD
+*.SRCINFO
+
+# Benevant's Scripts
+setup
+pypi_setup
+.vscode
