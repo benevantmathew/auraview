@@ -1,58 +1,33 @@
 """
-gui/gui.py
-
+auraview/gui/gui.py
 
 Author: Benevant Mathew
 Date: 2025-12-16
 """
-import os
 import tkinter as tk
 from tkinter import filedialog
-from PIL import ImageTk, Image
+
+from PIL import ImageTk
 from pillow_heif import register_heif_opener
-from auraview.gui.gui_functions import get_photo_file
-from auraview.core.photo_module import create_image_obj,  get_image_files,get_pic_wh
-from auraview.basic_functions.os_funs import (
-    get_all_files, get_end_from_path, move, copy, get_file_size
-)
+
+from auraview.core.image_controller import ImageController
+
+# Register HEIF opener
 register_heif_opener()
 
 class PhotoViewerGUI:
     """
     The main GUI
     """
-    def __init__(self, files=None, loc='.'):
+    def __init__(
+            self,
+            files=None,
+            loc='.'
+        ):
 
-        self.image_file = None
+        self.controller = ImageController(files, loc)
+
         self.img_obj = None
-        self.img_no = 0
-
-        # If a single file is passed
-        if isinstance(files, str):
-            if os.path.isfile(files):
-                loc = os.path.dirname(files)
-                all_files = get_image_files(get_all_files(loc))
-
-                self.files = all_files
-
-                # Set index to the clicked file
-                try:
-                    self.img_no = all_files.index(files)
-                except ValueError:
-                    self.img_no = 0
-            else:
-                # fallback
-                self.files = get_image_files(get_all_files(loc))
-
-        # If multiple files passed
-        elif isinstance(files, (list, tuple)):
-            self.files = get_image_files(files)
-
-        # If nothing passed
-        else:
-            self.files = get_image_files(get_all_files(loc))
-
-        self.img_nos = list(range(len(self.files)))
 
         self.root = tk.Tk()
         self.root.update_idletasks()  # important under Wayland
@@ -60,24 +35,22 @@ class PhotoViewerGUI:
         self.root.title("AuraView")
         self.root.resizable(True, True)
 
-        self.folder_path = ''
-        self.folder_q = ''
-
         # TEMP SIZE so window appears
         self.width = 500
         self.height = 500
         self.display_height = self.height
 
-        # self.root.geometry(f"{self.width}x{self.height}")
-
         self._create_widgets()
         self._bind_keys()
 
-        self.initialize()
+        self.update_screen()
 
         self.root.bind("<Configure>", self._on_resize)
         self.root.mainloop()
 
+    # -------------------------------------------------
+    # Window Resize Handling
+    # -------------------------------------------------
     def _on_resize(self, event):
 
         # Only react to root window resize
@@ -93,118 +66,54 @@ class PhotoViewerGUI:
 
         self.width = event.width
         self.height = event.height
-
         self.display_height = self.height
-        if self.display_height<0:
-            return
-
-        # print("Resized to:", self.width, self.height)
 
         # to rescale image dynamically:
         self.update_screen()
 
+    # -------------------------------------------------
+    # Screen Update
+    # -------------------------------------------------
     def update_screen(self):
         """
-        Updates the displayed image and metadata safely.
+        Docstring for update_screen
+
+        :param self: Description
         """
 
-        if not self.img_nos:
-            print('No photos found!')
+        img = self.controller.get_resized_image(self.width, self.display_height)
+        if not img:
             return
 
-        # Clamp index safely
-        if self.img_no >= len(self.img_nos):
-            self.img_no = len(self.img_nos) - 1
-
-        loaded = False
-
-        while self.img_nos and not loaded:
-            try:
-                self.image_file = self.files[self.img_nos[self.img_no]]
-
-                img = create_image_obj(
-                    self.image_file,
-                    self.width,
-                    self.display_height
-                )
-
-                self.img_obj = ImageTk.PhotoImage(img)
-                loaded = True
-
-            except Exception as e:
-                print(f"Error loading {self.files[self.img_nos[self.img_no]]}: {e}")
-
-                # Remove bad image
-                self.img_nos.pop(self.img_no)
-
-                # If list became empty
-                if not self.img_nos:
-                    break
-
-                # Clamp again
-                if self.img_no >= len(self.img_nos):
-                    self.img_no = len(self.img_nos) - 1
-
-        if not loaded:
-            print("No valid images remaining.")
-            self.image_file = None
-            return
-
-        # Update UI
+        self.img_obj = ImageTk.PhotoImage(img)
         self.label_img.config(image=self.img_obj)
-        self.label_img.image = self.img_obj  # prevent garbage collection
+        self.label_img.image = self.img_obj # prevent Garbage collection
 
-        self.label_name.config(text=get_photo_file(self.image_file))
-        self.label_size.config(text=f'Size: {get_file_size(self.image_file)} Mb')
-        self.label_dimensions.config(
-            text=f'Image Dimensions: {get_pic_wh(self.image_file)}'
-        )
+        metadata = self.controller.get_metadata()
 
-    def initialize(self):
+        if metadata:
+            self.label_name.config(text=metadata["name"])
+            self.label_size.config(text=f'Size: {metadata["size"]} Mb')
+            self.label_dimensions.config(
+                text=f'Image Dimensions: {metadata["dimensions"]}'
+            )
+
+    # -------------------------------------------------
+    # Image Operations (Delegated to Controller)
+    # -------------------------------------------------
+    def navigate(self, direction):
         """
-        Initializes the image viewer state.
-        """
-        if not self.img_nos:
-            print("No photos found!")
-            self.image_file = None
-            return
-
-        # Let update_screen handle everything
-        self.update_screen()
-
-    def move_f(self, quick=False):
-        """
-        Docstring for move_f
+        Docstring for navigate
 
         :param self: Description
-        :param quick: Description
+        :param direction: Description
         """
-        if not quick:
-            self.folder_q = filedialog.askdirectory()
-            if not self.folder_q:
-                print('Folder not selected!')
-                return
 
-        self.folder_path = '\\'.join(self.folder_q.split('/'))
-        move(self.image_file, f'{self.folder_path}\\{get_photo_file(self.image_file)}')
-        self.img_nos.pop(self.img_no)
-        self.update_screen()
+        if direction == "forward":
+            self.controller.next()
+        else:
+            self.controller.previous()
 
-    def copy_f(self, quick=False):
-        """
-        Docstring for copy_f
-
-        :param self: Description
-        :param quick: Description
-        """
-        if not quick:
-            self.folder_q = filedialog.askdirectory()
-            if not self.folder_q:
-                print('Folder not selected!')
-                return
-
-        self.folder_path = '\\'.join(self.folder_q.split('/'))
-        copy(self.image_file, f'{self.folder_path}\\{get_end_from_path(self.image_file)}')
         self.update_screen()
 
     def rotate_image(self, direction):
@@ -214,24 +123,41 @@ class PhotoViewerGUI:
         :param self: Description
         :param direction: Description
         """
-        im = Image.open(self.image_file)
-        im = im.transpose(Image.ROTATE_90 if direction == 'left' else Image.ROTATE_270)
-        im.save(self.image_file)
+
+        self.controller.rotate_current(direction)
         self.update_screen()
 
-    def navigate(self, direction):
+    def move_f(self):
         """
-        Docstring for navigate
+        Docstring for move_f
 
         :param self: Description
-        :param direction: Description
         """
-        if direction == 'forward' and self.img_no < len(self.img_nos) - 1:
-            self.img_no += 1
-        elif direction == 'back' and self.img_no > 0:
-            self.img_no -= 1
+
+        folder = filedialog.askdirectory()
+        if not folder:
+            return
+
+        self.controller.move_current(folder)
         self.update_screen()
 
+    def copy_f(self):
+        """
+        Docstring for copy_f
+
+        :param self: Description
+        """
+
+        folder = filedialog.askdirectory()
+        if not folder:
+            return
+
+        self.controller.copy_current(folder)
+        self.update_screen()
+
+    # -------------------------------------------------
+    # UI Creation
+    # -------------------------------------------------
     def _create_widgets(self):
         """
         Docstring for _create_widgets
