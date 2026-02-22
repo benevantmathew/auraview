@@ -43,5 +43,12 @@ include = ["auraview", "auraview.*"]
 [tool.setuptools.dynamic]
 version = { attr = "auraview.version.__version__" }
 
+[dependency-groups]
+dev = [
+    "build>=1.1.1",
+    "setuptools>=68.0.0",
+    "twine>=4.0.2",
+]
+
 [project.urls]
 Homepage = "https://github.com/benevantmathew/auraview"

@@ -31,3 +31,6 @@ PKGBUILD
 setup
 pypi
 .vscode
+
+# uv workflow
+uv.lock
