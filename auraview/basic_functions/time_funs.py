@@ -25,6 +25,15 @@ def datetime2string(dobj,format='%Y:%m:%d %H:%M:%S'):
     """
     return(dobj.strftime(format))
 
+def string2datetime(txt,text_format='%Y:%m:%d %H:%M:%S'):
+    """
+    Docstring for string2datetime
+
+    :param txt: Description
+    :param text_format: Description
+    """
+    return(datetime.strptime(txt, text_format))
+
 def file_creation_time(file):
     """
     Docstring for file_creation_time
