@@ -11,7 +11,7 @@ from pillow_heif import register_heif_opener
 
 from auraview.basic_functions.trash import delete_to_trash
 from auraview.basic_functions.os_funs import (
-    get_all_files, get_end_from_path, move, copy, get_file_size
+    get_all_files, get_end_from_path, move, copy, get_file_size, cwdfiles
 )
 from auraview.basic_functions.time_funs import file_creation_time
 from auraview.core.photo_module import (
@@ -40,7 +40,7 @@ class ImageController:
         if isinstance(files, str):
             if os.path.isfile(files):
                 loc = os.path.dirname(files)
-                all_files = get_image_files(get_all_files(loc))
+                all_files = get_image_files(cwdfiles(loc))
 
                 self.files = all_files
 
