@@ -6,7 +6,7 @@ Date: 2026-02-21
 """
 import os
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from pillow_heif import register_heif_opener
 
 from auraview.basic_functions.trash import delete_to_trash
@@ -36,8 +36,15 @@ class ImageController:
         self.folder_path=''
         self.folder_quick_operation=''
 
+        # Normalize loc always
+        loc = os.path.abspath(os.path.expanduser(loc))
+
         # If a single file is passed
         if isinstance(files, str):
+
+            # Normalize file path
+            files = os.path.abspath(os.path.expanduser(files))
+
             if os.path.isfile(files):
                 loc = os.path.dirname(files)
                 all_files = get_image_files(cwdfiles(loc))
@@ -55,6 +62,12 @@ class ImageController:
 
         # If multiple files passed
         elif isinstance(files, (list, tuple)):
+            # Normalize every file
+            files = [
+                os.path.abspath(os.path.expanduser(f))
+                for f in files
+            ]
+
             self.files = get_image_files(files)
 
         # If nothing passed
@@ -125,16 +138,24 @@ class ImageController:
 
     def get_resized_image(self, width, height):
         """
-        Docstring for get_resized_image
-
-        :param self: Description
-        :param width: Description
-        :param height: Description
+        Return resized image object.
+        Automatically removes invalid/corrupted images.
         """
-        path = self.get_current_path()
-        if not path:
-            return None
-        return create_image_obj(path, width, height)
+
+        while self.files:
+            path = self.get_current_path()
+
+            if not path:
+                return None
+
+            try:
+                return create_image_obj(path, width, height)
+
+            except UnidentifiedImageError:
+                print(f"Removing invalid image: {path}")
+                self._remove_current()
+
+        return None
 
     def get_metadata(self):
         """

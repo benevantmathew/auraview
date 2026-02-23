@@ -65,21 +65,26 @@ def rename(file, new_name):
     os.rename(file, new_name)
     return print('rename completed')
 
-def cwdfiles(loc='.'):
+def cwdfiles(loc='.', full_path=True):
     """
-    Docstring for cwdfiles
+    List files in a directory.
 
-    :param loc: Description
+    :param loc: Directory path (default: current working directory)
+    :param full_path: If True → return absolute paths
+                    If False → return filenames only
+    :return: List of files
     """
-    lst = os.listdir(loc)
-    out = []
-    for item in lst:
-        if loc == '.':
-            if os.path.isfile(item):
-                out = out + [item]
-        elif os.path.isfile(loc + '\\' + item):
-            out = out + [item]
-    return out
+    files = []
+
+    for item in os.listdir(loc):
+        full = os.path.join(loc, item)
+        if os.path.isfile(full):
+            if full_path:
+                files.append(os.path.abspath(full))
+            else:
+                files.append(item)
+
+    return files
 
 def get_all_files(loc):
     """

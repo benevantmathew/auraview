@@ -1,5 +1,7 @@
 # Changelog
 
+## Version 0.5.0 23-02-2026
+- Bug on file input.
 ## Version 0.4.0 23-02-2026
 - removed recursive selection of all images while using file as input.
 ## Version 0.3.0 23-02-2026
