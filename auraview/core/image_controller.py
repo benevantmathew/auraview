@@ -148,6 +148,11 @@ class ImageController:
             if not path:
                 return None
 
+            if not os.path.exists(path):
+                print(f"Path does not exist: {path}")
+                self._remove_current()
+                continue
+
             try:
                 return create_image_obj(path, width, height)
 
