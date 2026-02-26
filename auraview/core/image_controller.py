@@ -68,6 +68,13 @@ class ImageController:
                 for f in files
             ]
 
+            # review if file exist
+            files = [
+                f
+                for f in files
+                if os.path.exists(f)
+            ]
+
             self.files = get_image_files(files)
 
         # If nothing passed
