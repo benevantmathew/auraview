@@ -352,6 +352,7 @@ class ImageController:
     def _get_image_files(self, files=None, loc=None, full_path=True, reverse=False):
         """
         Return image files from a list or directory.
+        if input is files do not sort
 
         Parameters
         ----------
@@ -364,13 +365,14 @@ class ImageController:
         reverse : bool
             Reverse sorting order
         """
-
+        scanned = False
 
         # If files not provided, read directory
         if files is None:
             if loc is None:
                 raise ValueError("Either 'files' or 'loc' must be provided")
 
+            scanned = True
             files = []
             for entry in os.scandir(loc):
                 if entry.is_file():
@@ -383,8 +385,13 @@ class ImageController:
             if ext in self.image_ext:
                 filtered.append(f)
 
-        # Natural sort
-        filtered = natsorted(filtered, key=lambda x: os.path.basename(x), reverse=reverse)
+        # Only sort if scanned from directory
+        if scanned:
+            filtered = natsorted(
+                filtered,
+                key=lambda x: os.path.basename(x),
+                reverse=reverse
+            )
 
         return filtered
 
