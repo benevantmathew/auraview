@@ -86,7 +86,8 @@ def main():
         with open(args.logfile, "r") as f:
             files = [line.strip() for line in f if line.strip()]
 
-        PhotoViewerGUI(files=files)
+        obj = PhotoViewerGUI(files=files)
+        obj.run()
         return
 
     # --- Normal mode ---
