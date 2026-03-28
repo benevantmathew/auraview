@@ -4,6 +4,7 @@ application/photo_module.py
 Author: Benevant Mathew
 Date: 2025-12-16
 """
+# pylint: disable=no-member
 import os
 from PIL import Image
 import piexif
