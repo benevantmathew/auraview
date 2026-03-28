@@ -1,5 +1,7 @@
 # Changelog
 
+## Version 0.7.0 28-03-2026
+- bugfix on --logfile mode
 ## Version 0.6.0 24-02-2026
 - Natural sort feature added.
 - Transfer dev workflow to pure uv.
