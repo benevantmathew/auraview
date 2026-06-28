@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.0.0 28-06-2026
+- Add image zoom controls with Ctrl+plus, Ctrl+minus, Ctrl+0 reset view shortcuts.
+- Add scrollable image canvas for zoomed images.
+
 ## Version 0.7.0 28-03-2026
 - bugfix on --logfile mode
 ## Version 0.6.0 24-02-2026

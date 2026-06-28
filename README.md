@@ -31,6 +31,7 @@ It focuses on:
 - View photos smoothly and instantly
 - Supports Apple image formats (including HEIF/HEIC)
 - Keyboard-based image navigation
+- Image zoom with reset view shortcuts
 - Image rotation support
 - In-place rotation (changes persist)
 - Copy images to another location

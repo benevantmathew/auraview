@@ -22,6 +22,11 @@ Options:
     --author, -a       Show author and exit
     (No arguments)     Launch the GUI application
     [folder_path]  or [filelist/single file]
+
+Shortcuts:
+    Ctrl + +          Zoom in
+    Ctrl + -          Zoom out
+    Ctrl + 0          Reset view
     """
     print(help_message)
     sys.exit(0)

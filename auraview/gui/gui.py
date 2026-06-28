@@ -17,6 +17,10 @@ from auraview.core.image_controller import ImageController
 # Register HEIF opener
 register_heif_opener()
 
+ZOOM_STEP = 1.25
+MIN_ZOOM = 0.1
+MAX_ZOOM = 8.0
+
 class PhotoViewerGUI:
     """
     The main GUI
@@ -31,6 +35,8 @@ class PhotoViewerGUI:
         self.controller = ImageController(self.files, loc)
 
         self.img_obj = None
+        self.canvas_image_ref = None
+        self.zoom = 1.0
 
         # TEMP SIZE so window appears
         self.width = 500
@@ -93,13 +99,40 @@ class PhotoViewerGUI:
         :param self: Description
         """
 
-        img = self.controller.get_resized_image(self.width, self.display_height)
+        img = self.controller.get_resized_image(
+            self.width,
+            self.display_height,
+            zoom=self.zoom
+        )
         if not img:
             return
 
         self.img_obj = ImageTk.PhotoImage(img)
-        self.label_img.config(image=self.img_obj)
-        self.label_img.image = self.img_obj # prevent Garbage collection
+        self.canvas_img.delete("all")
+
+        canvas_width = max(self.canvas_img.winfo_width(), self.width)
+        canvas_height = max(self.canvas_img.winfo_height(), self.display_height)
+        image_width = self.img_obj.width()
+        image_height = self.img_obj.height()
+        x_offset = max((canvas_width - image_width) // 2, 0)
+        y_offset = max((canvas_height - image_height) // 2, 0)
+
+        self.canvas_img.create_image(
+            x_offset,
+            y_offset,
+            image=self.img_obj,
+            anchor="nw"
+        )
+        self.canvas_image_ref = self.img_obj # prevent Garbage collection
+        self.canvas_img.config(
+            scrollregion=(
+                0,
+                0,
+                max(image_width, canvas_width),
+                max(image_height, canvas_height)
+            )
+        )
+        self.label_zoom.config(text=f"Zoom: {int(self.zoom * 100)}%")
 
         metadata = self.controller.get_metadata()
 
@@ -165,7 +198,25 @@ class PhotoViewerGUI:
         else:
             self.controller.previous()
 
+        self.reset_view(update=False)
         self.update_screen()
+
+    def zoom_image(self, direction):
+        """Zoom the current image in or out."""
+        if direction == "in":
+            self.zoom = min(MAX_ZOOM, self.zoom * ZOOM_STEP)
+        elif direction == "out":
+            self.zoom = max(MIN_ZOOM, self.zoom / ZOOM_STEP)
+        else:
+            return
+
+        self.update_screen()
+
+    def reset_view(self, update=True):
+        """Reset the current image to fit the viewer area."""
+        self.zoom = 1.0
+        if update:
+            self.update_screen()
 
     def rotate_image(self, direction):
         """
@@ -233,6 +284,7 @@ class PhotoViewerGUI:
         Docstring for home_button
         """
         self.controller.home()
+        self.reset_view(update=False)
         self.update_screen()
 
     def end_button(self):
@@ -240,6 +292,7 @@ class PhotoViewerGUI:
         Docstring for end_button
         """
         self.controller.end()
+        self.reset_view(update=False)
         self.update_screen()
 
     # -------------------------------------------------
@@ -270,8 +323,36 @@ class PhotoViewerGUI:
 
         #All labels
         ## row 1
-        self.label_img = tk.Label(self.main_frame, image=self.img_obj)
-        self.label_img.grid(row=1, column=0, columnspan=6, sticky="nsew")
+        self.image_frame = tk.Frame(self.main_frame)
+        self.image_frame.grid(row=1, column=0, columnspan=6, sticky="nsew")
+        self.image_frame.grid_rowconfigure(0, weight=1)
+        self.image_frame.grid_columnconfigure(0, weight=1)
+
+        self.canvas_img = tk.Canvas(
+            self.image_frame,
+            highlightthickness=0,
+            background="black"
+        )
+        self.canvas_img.grid(row=0, column=0, sticky="nsew")
+
+        self.scrollbar_y = tk.Scrollbar(
+            self.image_frame,
+            orient="vertical",
+            command=self.canvas_img.yview
+        )
+        self.scrollbar_y.grid(row=0, column=1, sticky="ns")
+
+        self.scrollbar_x = tk.Scrollbar(
+            self.image_frame,
+            orient="horizontal",
+            command=self.canvas_img.xview
+        )
+        self.scrollbar_x.grid(row=1, column=0, sticky="ew")
+
+        self.canvas_img.configure(
+            xscrollcommand=self.scrollbar_x.set,
+            yscrollcommand=self.scrollbar_y.set
+        )
 
         ## row 2
         self.label_counter = tk.Label(self.main_frame)
@@ -429,6 +510,22 @@ class PhotoViewerGUI:
         self.label_move_copy_dir=tk.Label(self.main_frame)
         self.label_move_copy_dir.grid(row=8, column=0,columnspan=2)
 
+        self.button_zoom_out = tk.Button(
+            self.main_frame,
+            text="Zoom -",
+            command=lambda: self.zoom_image('out'),
+            width=20
+        )
+        self.button_zoom_out.grid(row=8, column=2)
+
+        self.button_zoom_in = tk.Button(
+            self.main_frame,
+            text="Zoom +",
+            command=lambda: self.zoom_image('in'),
+            width=20
+        )
+        self.button_zoom_in.grid(row=8, column=3)
+
         button_update_ext=tk.Button(
             self.main_frame,
             text="Update Ext",
@@ -437,7 +534,18 @@ class PhotoViewerGUI:
         )
         button_update_ext.grid(row=8, column=4)
 
+        self.button_reset_view = tk.Button(
+            self.main_frame,
+            text="Reset View",
+            command=self.reset_view,
+            width=20
+        )
+        self.button_reset_view.grid(row=8, column=5)
+
         ## row 9
+        self.label_zoom = tk.Label(self.main_frame)
+        self.label_zoom.grid(row=9, column=0)
+
         # dropdown = tk.OptionMenu(
         #     self.main_frame,
         #     self.selected_option,
@@ -487,6 +595,7 @@ class PhotoViewerGUI:
             internal_index = total - 1
 
         self.controller.go_to(internal_index)
+        self.reset_view(update=False)
         self.update_screen()
 
     def select_date(self):
@@ -582,6 +691,13 @@ class PhotoViewerGUI:
         self.root.bind('<Escape>',lambda e: self.root.destroy())
         self.root.bind("<Button-1>", lambda e: self.disable_entry(e))
         self.root.bind('<Delete>', lambda e: self.delete_key())
+        self.root.bind('<Control-plus>', lambda e: self.zoom_image('in'))
+        self.root.bind('<Control-equal>', lambda e: self.zoom_image('in'))
+        self.root.bind('<Control-KP_Add>', lambda e: self.zoom_image('in'))
+        self.root.bind('<Control-minus>', lambda e: self.zoom_image('out'))
+        self.root.bind('<Control-KP_Subtract>', lambda e: self.zoom_image('out'))
+        self.root.bind('<Control-0>', lambda e: self.reset_view())
+        self.root.bind('<Control-KP_0>', lambda e: self.reset_view())
         #entry binds
         self.entry_index.bind("<Button-1>", lambda e: self.enable_entry())
         self.entry_index.bind("<Return>", lambda e: self.return_key2photo_number(e))

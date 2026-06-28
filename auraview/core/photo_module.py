@@ -20,7 +20,7 @@ from auraview.basic_functions.time_funs import (
 )
 
 # Photo module
-def pic_auto_size(img, max_w, max_h):
+def pic_auto_size(img, max_w, max_h, zoom=1.0):
     """
     Docstring for pic_auto_size
 
@@ -35,10 +35,10 @@ def pic_auto_size(img, max_w, max_h):
     if w == 0 or h == 0:
         return (0, 0)
 
-    scale = min(max_w / w, max_h / h)
+    scale = min(max_w / w, max_h / h) * zoom
 
-    new_w = int(w * scale)
-    new_h = int(h * scale)
+    new_w = max(1, int(w * scale))
+    new_h = max(1, int(h * scale))
 
     return new_w, new_h
 
@@ -90,7 +90,7 @@ def image_datetime_digitized(file):
         dt = 'NA'
     return dt
 
-def create_image_obj(file, width, height):
+def create_image_obj(file, width, height, zoom=1.0):
     """
     Docstring for create_image_obj
 
@@ -98,7 +98,7 @@ def create_image_obj(file, width, height):
     :param width: Description
     :param height: Description
     """
-    pic_size = pic_auto_size(file, width, height)
+    pic_size = pic_auto_size(file, width, height, zoom=zoom)
     obj = Image.open(file).resize(pic_size,Image.LANCZOS)
     return obj
 

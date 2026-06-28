@@ -151,7 +151,7 @@ class ImageController:
             return None
         return self.files[self.img_no]
 
-    def get_resized_image(self, width, height):
+    def get_resized_image(self, width, height, zoom=1.0):
         """
         Return resized image object.
         Automatically removes invalid/corrupted images.
@@ -169,7 +169,7 @@ class ImageController:
                 continue
 
             try:
-                return create_image_obj(path, width, height)
+                return create_image_obj(path, width, height, zoom=zoom)
 
             except UnidentifiedImageError:
                 print(f"Removing invalid image: {path}")
