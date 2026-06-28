@@ -27,7 +27,12 @@ Shortcuts:
     Ctrl + +          Zoom in
     Ctrl + -          Zoom out
     Ctrl + 0          Reset view
+    Ctrl + MouseWheel Zoom in/out
+    Ctrl + Middle     Reset view
     Ctrl + Left Mouse Pan zoomed image
+    MouseWheel        Vertical scroll
+    Middle Drag       Vertical scroll
+    Horizontal Wheel  Horizontal scroll
     """
     print(help_message)
     sys.exit(0)

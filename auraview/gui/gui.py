@@ -37,6 +37,7 @@ class PhotoViewerGUI:
         self.img_obj = None
         self.canvas_image_ref = None
         self.zoom = 1.0
+        self.middle_scroll_x = 0
 
         # TEMP SIZE so window appears
         self.width = 500
@@ -240,6 +241,57 @@ class PhotoViewerGUI:
         self.canvas_img.config(cursor="")
         return "break"
 
+    def zoom_with_mouse_wheel(self, event):
+        """Zoom with Ctrl + mouse wheel on Windows/macOS and Linux."""
+        if getattr(event, "num", None) == 4 or getattr(event, "delta", 0) > 0:
+            self.zoom_image("in")
+        elif getattr(event, "num", None) == 5 or getattr(event, "delta", 0) < 0:
+            self.zoom_image("out")
+
+        return "break"
+
+    def reset_view_from_mouse(self, event):
+        """Reset zoom with Ctrl + middle mouse button."""
+        self.reset_view()
+        return "break"
+
+    def scroll_vertical_with_mouse(self, event):
+        """Scroll the image canvas vertically with the mouse wheel."""
+        if getattr(event, "num", None) == 4 or getattr(event, "delta", 0) > 0:
+            units = -3
+        else:
+            units = 3
+
+        self.canvas_img.yview_scroll(units, "units")
+        return "break"
+
+    def scroll_horizontal_with_mouse(self, event):
+        """Scroll the image canvas horizontally with tilt/shift mouse wheel."""
+        if getattr(event, "num", None) == 6 or getattr(event, "delta", 0) > 0:
+            units = -3
+        else:
+            units = 3
+
+        self.canvas_img.xview_scroll(units, "units")
+        return "break"
+
+    def start_middle_vertical_scroll(self, event):
+        """Start middle-button drag scrolling constrained to vertical movement."""
+        self.middle_scroll_x = event.x
+        self.canvas_img.scan_mark(event.x, event.y)
+        self.canvas_img.config(cursor="sb_v_double_arrow")
+        return "break"
+
+    def middle_vertical_scroll(self, event):
+        """Scroll vertically while the middle mouse button is dragged."""
+        self.canvas_img.scan_dragto(self.middle_scroll_x, event.y, gain=1)
+        return "break"
+
+    def end_middle_vertical_scroll(self, event):
+        """Restore the pointer after middle-button vertical scrolling."""
+        self.canvas_img.config(cursor="")
+        return "break"
+
     def rotate_image(self, direction):
         """
         Docstring for rotate_image
@@ -345,7 +397,8 @@ class PhotoViewerGUI:
 
         #All labels
         ## row 1
-        self.image_frame = tk.Frame(self.main_frame)
+        gui_bg = self.main_frame.cget("background")
+        self.image_frame = tk.Frame(self.main_frame, background=gui_bg)
         self.image_frame.grid(row=1, column=0, columnspan=6, sticky="nsew")
         self.image_frame.grid_rowconfigure(0, weight=1)
         self.image_frame.grid_columnconfigure(0, weight=1)
@@ -353,7 +406,7 @@ class PhotoViewerGUI:
         self.canvas_img = tk.Canvas(
             self.image_frame,
             highlightthickness=0,
-            background="black"
+            background=gui_bg
         )
         self.canvas_img.grid(row=0, column=0, sticky="nsew")
 
@@ -378,6 +431,19 @@ class PhotoViewerGUI:
         self.canvas_img.bind('<Control-ButtonPress-1>', self.start_pan)
         self.canvas_img.bind('<Control-B1-Motion>', self.pan_image)
         self.canvas_img.bind('<Control-ButtonRelease-1>', self.end_pan)
+        self.canvas_img.bind('<Control-MouseWheel>', self.zoom_with_mouse_wheel)
+        self.canvas_img.bind('<Control-Button-4>', self.zoom_with_mouse_wheel)
+        self.canvas_img.bind('<Control-Button-5>', self.zoom_with_mouse_wheel)
+        self.canvas_img.bind('<Control-Button-2>', self.reset_view_from_mouse)
+        self.canvas_img.bind('<MouseWheel>', self.scroll_vertical_with_mouse)
+        self.canvas_img.bind('<Button-4>', self.scroll_vertical_with_mouse)
+        self.canvas_img.bind('<Button-5>', self.scroll_vertical_with_mouse)
+        self.canvas_img.bind('<Shift-MouseWheel>', self.scroll_horizontal_with_mouse)
+        self.canvas_img.bind('<Button-6>', self.scroll_horizontal_with_mouse)
+        self.canvas_img.bind('<Button-7>', self.scroll_horizontal_with_mouse)
+        self.canvas_img.bind('<ButtonPress-2>', self.start_middle_vertical_scroll)
+        self.canvas_img.bind('<B2-Motion>', self.middle_vertical_scroll)
+        self.canvas_img.bind('<ButtonRelease-2>', self.end_middle_vertical_scroll)
 
         ## row 2
         self.label_counter = tk.Label(self.main_frame)
