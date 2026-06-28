@@ -9,6 +9,7 @@
 - Fit normal view to the actual canvas area above the bottom controls without changing aspect ratio.
 - Add `~/.config/auraview/settings.json` with dark/light theme and GUI font settings.
 - Open an empty app when launched without arguments instead of scanning the current directory.
+- Keep file input as a folder picture roll and add `--non-recursive` for folder-only directory rolls.
 - Add scrollable image canvas for zoomed images.
 
 ## Version 0.7.0 28-03-2026

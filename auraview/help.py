@@ -24,6 +24,7 @@ Options:
     --font_family FONT Override GUI font family for this run
     --font_size SIZE   Override GUI font size for this run
     --tk_scaling ZOOM  Override Tk scaling for this run
+    --non-recursive    With folder input, only add images directly in that folder
     (No arguments)     Launch an empty GUI application
     [folder_path]  or [filelist/single file]
 

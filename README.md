@@ -40,6 +40,7 @@ It focuses on:
 - In-place rotation (changes persist)
 - Copy images to another location
 - Move images between directories
+- Directory input loads images recursively by default; use `--non-recursive` to only load that folder
 
 ---
 
@@ -61,10 +62,16 @@ auraview
 
 Launching without arguments opens an empty viewer. It no longer scans the current directory automatically.
 
-Open a specific directory:
+Open a specific directory recursively:
 
 ```bash
 auraview /path/to/folder
+```
+
+Open only images directly inside a directory:
+
+```bash
+auraview /path/to/folder --non-recursive
 ```
 
 Open a specific image file:

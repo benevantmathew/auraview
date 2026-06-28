@@ -30,7 +30,8 @@ class PhotoViewerGUI:
             self,
             files=None,
             loc='.',
-            ui_options=None
+            ui_options=None,
+            recursive=True
         ):
         self.files = files
         self.ui_settings = load_ui_settings(overrides=ui_options)
@@ -39,7 +40,7 @@ class PhotoViewerGUI:
             self.ui_settings["font_size"]
         )
 
-        self.controller = ImageController(self.files, loc)
+        self.controller = ImageController(self.files, loc, recursive=recursive)
 
         self.img_obj = None
         self.canvas_image_ref = None

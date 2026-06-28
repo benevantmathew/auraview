@@ -36,10 +36,12 @@ class ImageController:
     def __init__(
             self,
             files=None,
-            loc='.'
+            loc='.',
+            recursive=True
         ):
         self.files = files
         self.loc = loc
+        self.recursive = recursive
         self.img_no = 0
         self.folder_path=''
         self.folder_quick_operation=''
@@ -85,9 +87,12 @@ class ImageController:
 
             self.files = self._get_image_files(files=self.files)
 
-        # If nothing passed
+        # If only a directory location is passed
         else:
-            self.files = self._get_all_image_files(loc=self.loc)
+            if self.recursive:
+                self.files = self._get_all_image_files(loc=self.loc)
+            else:
+                self.files = self._get_image_files(loc=self.loc)
 
     # ------------------------
     # Navigation

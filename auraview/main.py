@@ -52,6 +52,11 @@ def parse_arguments():
         nargs="?",
         help="Image file or directory path"
     )
+    parser.add_argument(
+        "--non-recursive",
+        action="store_true",
+        help="For directory input, only add images directly in that folder"
+    )
 
     return parser.parse_args()
 
@@ -90,6 +95,8 @@ def main():
         "tk_scaling": args.tk_scaling,
     }
 
+    recursive = not args.non_recursive
+
     # --- Logfile mode ---
     if args.logfile:
         if not os.path.isfile(args.logfile):
@@ -99,20 +106,20 @@ def main():
         with open(args.logfile, "r") as f:
             files = [line.strip() for line in f if line.strip()]
 
-        obj = PhotoViewerGUI(files=files, ui_options=ui_options)
+        obj = PhotoViewerGUI(files=files, ui_options=ui_options, recursive=recursive)
         obj.run()
         return
 
     # --- Normal mode ---
     if args.path:
         if os.path.isdir(args.path):
-            obj=PhotoViewerGUI(loc=args.path, ui_options=ui_options)
+            obj=PhotoViewerGUI(loc=args.path, ui_options=ui_options, recursive=recursive)
             obj.run()
         else:
-            obj = PhotoViewerGUI(files=args.path, ui_options=ui_options)
+            obj = PhotoViewerGUI(files=args.path, ui_options=ui_options, recursive=recursive)
             obj.run()
     else:
-        obj = PhotoViewerGUI(files=[], ui_options=ui_options)
+        obj = PhotoViewerGUI(files=[], ui_options=ui_options, recursive=recursive)
         obj.run()
 
 
