@@ -87,8 +87,20 @@ class PhotoViewerGUI:
         self.height = event.height
         self.display_height = self.height
 
-        # to rescale image dynamically:
-        self.update_screen()
+        # Allow Tk grid geometry to settle before fitting to canvas.
+        self.root.after_idle(self.update_screen)
+
+    def _get_canvas_size(self):
+        """Return the actual drawable canvas size for image fitting."""
+        canvas_width = self.canvas_img.winfo_width()
+        canvas_height = self.canvas_img.winfo_height()
+
+        if canvas_width <= 1:
+            canvas_width = self.width
+        if canvas_height <= 1:
+            canvas_height = self.display_height
+
+        return max(canvas_width, 1), max(canvas_height, 1)
 
     # -------------------------------------------------
     # Screen Update
@@ -100,9 +112,11 @@ class PhotoViewerGUI:
         :param self: Description
         """
 
+        canvas_width, canvas_height = self._get_canvas_size()
+
         img = self.controller.get_resized_image(
-            self.width,
-            self.display_height,
+            canvas_width,
+            canvas_height,
             zoom=self.zoom
         )
         if not img:
@@ -111,8 +125,6 @@ class PhotoViewerGUI:
         self.img_obj = ImageTk.PhotoImage(img)
         self.canvas_img.delete("all")
 
-        canvas_width = max(self.canvas_img.winfo_width(), self.width)
-        canvas_height = max(self.canvas_img.winfo_height(), self.display_height)
         image_width = self.img_obj.width()
         image_height = self.img_obj.height()
         x_offset = max((canvas_width - image_width) // 2, 0)
