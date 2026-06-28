@@ -2,6 +2,7 @@
 
 ## Version 1.0.0 28-06-2026
 - Add image zoom controls with Ctrl+plus, Ctrl+minus, Ctrl+0 reset view shortcuts.
+- Add Ctrl+left-mouse drag panning for zoomed images.
 - Add scrollable image canvas for zoomed images.
 
 ## Version 0.7.0 28-03-2026

@@ -218,6 +218,28 @@ class PhotoViewerGUI:
         if update:
             self.update_screen()
 
+    def start_pan(self, event):
+        """Start Ctrl + left-mouse panning for zoomed images."""
+        if self.zoom <= 1.0:
+            return "break"
+
+        self.canvas_img.scan_mark(event.x, event.y)
+        self.canvas_img.config(cursor="fleur")
+        return "break"
+
+    def pan_image(self, event):
+        """Pan the zoomed image while Ctrl + left mouse is dragged."""
+        if self.zoom <= 1.0:
+            return "break"
+
+        self.canvas_img.scan_dragto(event.x, event.y, gain=1)
+        return "break"
+
+    def end_pan(self, event):
+        """Restore the pointer after Ctrl + left-mouse panning."""
+        self.canvas_img.config(cursor="")
+        return "break"
+
     def rotate_image(self, direction):
         """
         Docstring for rotate_image
@@ -353,6 +375,9 @@ class PhotoViewerGUI:
             xscrollcommand=self.scrollbar_x.set,
             yscrollcommand=self.scrollbar_y.set
         )
+        self.canvas_img.bind('<Control-ButtonPress-1>', self.start_pan)
+        self.canvas_img.bind('<Control-B1-Motion>', self.pan_image)
+        self.canvas_img.bind('<Control-ButtonRelease-1>', self.end_pan)
 
         ## row 2
         self.label_counter = tk.Label(self.main_frame)

@@ -32,6 +32,7 @@ It focuses on:
 - Supports Apple image formats (including HEIF/HEIC)
 - Keyboard-based image navigation
 - Image zoom with reset view shortcuts
+- Ctrl + left-mouse drag panning for zoomed images
 - Image rotation support
 - In-place rotation (changes persist)
 - Copy images to another location

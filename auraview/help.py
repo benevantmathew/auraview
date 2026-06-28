@@ -27,6 +27,7 @@ Shortcuts:
     Ctrl + +          Zoom in
     Ctrl + -          Zoom out
     Ctrl + 0          Reset view
+    Ctrl + Left Mouse Pan zoomed image
     """
     print(help_message)
     sys.exit(0)
