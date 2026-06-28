@@ -1,0 +1,10 @@
+{
+    "ui": {
+        "font_family": "Arial",
+        "font_size": 12,
+        "tk_scaling": 1.0,
+        "window_width": 900,
+        "window_height": 700,
+        "theme": "dark"
+    }
+}

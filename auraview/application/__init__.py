@@ -1,0 +1,1 @@
+"""Bundled AuraView application data."""

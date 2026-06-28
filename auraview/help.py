@@ -20,7 +20,11 @@ Options:
     --help, -h         Show this help message and exit
     --email, -e        Show email and exit
     --author, -a       Show author and exit
-    (No arguments)     Launch the GUI application
+    --theme THEME      Override settings theme: dark or light
+    --font_family FONT Override GUI font family for this run
+    --font_size SIZE   Override GUI font size for this run
+    --tk_scaling ZOOM  Override Tk scaling for this run
+    (No arguments)     Launch an empty GUI application
     [folder_path]  or [filelist/single file]
 
 Shortcuts:

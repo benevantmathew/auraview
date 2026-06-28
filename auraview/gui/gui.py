@@ -13,6 +13,7 @@ from pillow_heif import register_heif_opener
 
 from auraview.version import __version__
 from auraview.core.image_controller import ImageController
+from auraview.basic_functions.settings import load_ui_settings
 
 # Register HEIF opener
 register_heif_opener()
@@ -28,9 +29,15 @@ class PhotoViewerGUI:
     def __init__(
             self,
             files=None,
-            loc='.'
+            loc='.',
+            ui_options=None
         ):
         self.files = files
+        self.ui_settings = load_ui_settings(overrides=ui_options)
+        self.gui_font = (
+            self.ui_settings["font_family"],
+            self.ui_settings["font_size"]
+        )
 
         self.controller = ImageController(self.files, loc)
 
@@ -45,6 +52,10 @@ class PhotoViewerGUI:
         self.display_height = self.height
 
         self.root = tk.Tk()
+        self.root.tk.call("tk", "scaling", self.ui_settings["tk_scaling"])
+        self.root.geometry(
+            f'{self.ui_settings["window_width"]}x{self.ui_settings["window_height"]}'
+        )
         self.selected_option = tk.StringVar(self.root)
         self.date_var = tk.StringVar()
 
@@ -54,6 +65,7 @@ class PhotoViewerGUI:
         self.root.resizable(True, True)
 
         self._create_widgets()
+        self._apply_theme()
         self._bind_keys()
 
         self.update_screen()
@@ -102,6 +114,41 @@ class PhotoViewerGUI:
 
         return max(canvas_width, 1), max(canvas_height, 1)
 
+    def _show_empty_state(self):
+        """Show an empty app state when no image is loaded."""
+        self.canvas_img.delete("all")
+        canvas_width, canvas_height = self._get_canvas_size()
+        self.canvas_img.config(scrollregion=(0, 0, canvas_width, canvas_height))
+        self.label_zoom.config(text="Zoom: 100%")
+        self.label_counter.config(text="0/0")
+
+        for label in [
+                self.label_name,
+                self.label_size,
+                self.label_dimensions,
+                self.label_image_dpi,
+                self.label_move_copy_dir,
+                self.label_image_ext,
+                self.label_image_datetimeoriginal,
+                self.label_image_datetimedigitized,
+                self.label_image_datetime,
+                self.label_image_filecreationtime,
+                self.label_image_dir,
+            ]:
+            label.config(text="")
+
+        for button in [self.button_back, self.button_forward]:
+            button.config(state=tk.DISABLED)
+
+        self.canvas_img.create_text(
+            canvas_width // 2,
+            canvas_height // 2,
+            text="Open an image file or folder to start",
+            fill=self.ui_settings["foreground_color"],
+            font=self.gui_font,
+            anchor="center"
+        )
+
     # -------------------------------------------------
     # Screen Update
     # -------------------------------------------------
@@ -120,6 +167,7 @@ class PhotoViewerGUI:
             zoom=self.zoom
         )
         if not img:
+            self._show_empty_state()
             return
 
         self.img_obj = ImageTk.PhotoImage(img)
@@ -381,6 +429,58 @@ class PhotoViewerGUI:
         self.reset_view(update=False)
         self.update_screen()
 
+    def _apply_theme(self):
+        """Apply configured theme colors and font to all Tk widgets."""
+        self.root.configure(background=self.ui_settings["background_color"])
+
+        def apply_to_widget(widget):
+            common_options = {}
+            if isinstance(widget, (tk.Frame, tk.LabelFrame)):
+                common_options["background"] = self.ui_settings["background_color"]
+            if isinstance(widget, tk.LabelFrame):
+                common_options["foreground"] = self.ui_settings["foreground_color"]
+                common_options["font"] = self.gui_font
+            elif isinstance(widget, tk.Label):
+                common_options.update({
+                    "background": self.ui_settings["background_color"],
+                    "foreground": self.ui_settings["foreground_color"],
+                    "font": self.gui_font,
+                })
+            elif isinstance(widget, tk.Button):
+                common_options.update({
+                    "background": self.ui_settings["button_background_color"],
+                    "foreground": self.ui_settings["button_foreground_color"],
+                    "activebackground": self.ui_settings["canvas_background_color"],
+                    "activeforeground": self.ui_settings["foreground_color"],
+                    "font": self.gui_font,
+                })
+            elif isinstance(widget, tk.Entry):
+                common_options.update({
+                    "background": self.ui_settings["input_background_color"],
+                    "foreground": self.ui_settings["input_foreground_color"],
+                    "insertbackground": self.ui_settings["input_foreground_color"],
+                    "font": self.gui_font,
+                })
+            elif isinstance(widget, tk.Canvas):
+                common_options["background"] = self.ui_settings["canvas_background_color"]
+            elif isinstance(widget, tk.Scrollbar):
+                common_options.update({
+                    "background": self.ui_settings["scrollbar_background_color"],
+                    "troughcolor": self.ui_settings["background_color"],
+                    "activebackground": self.ui_settings["button_background_color"],
+                })
+
+            if common_options:
+                try:
+                    widget.configure(**common_options)
+                except tk.TclError:
+                    pass
+
+            for child in widget.winfo_children():
+                apply_to_widget(child)
+
+        apply_to_widget(self.root)
+
     # -------------------------------------------------
     # UI Creation
     # -------------------------------------------------
@@ -409,7 +509,7 @@ class PhotoViewerGUI:
 
         #All labels
         ## row 1
-        gui_bg = self.main_frame.cget("background")
+        gui_bg = self.ui_settings["canvas_background_color"]
         self.image_frame = tk.Frame(self.main_frame, background=gui_bg)
         self.image_frame.grid(row=1, column=0, columnspan=6, sticky="nsew")
         self.image_frame.grid_rowconfigure(0, weight=1)

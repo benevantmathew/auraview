@@ -42,7 +42,7 @@ include-package-data = true
 include = ["auraview", "auraview.*"]
 
 [tool.setuptools.package-data]
-"auraview" = ["config/extensions.json"]
+"auraview" = ["application/settings.json"]
 
 [tool.setuptools.dynamic]
 version = { attr = "auraview.version.__version__" }

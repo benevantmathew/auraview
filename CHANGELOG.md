@@ -7,6 +7,8 @@
 - Add mouse-wheel vertical scrolling, middle-button vertical drag scrolling, and horizontal tilt-wheel scrolling.
 - Keep canvas background matched to the GUI instead of black.
 - Fit normal view to the actual canvas area above the bottom controls without changing aspect ratio.
+- Add `~/.config/auraview/settings.json` with dark/light theme and GUI font settings.
+- Open an empty app when launched without arguments instead of scanning the current directory.
 - Add scrollable image canvas for zoomed images.
 
 ## Version 0.7.0 28-03-2026

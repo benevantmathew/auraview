@@ -31,6 +31,8 @@ It focuses on:
 - View photos smoothly and instantly
 - Supports Apple image formats (including HEIF/HEIC)
 - Keyboard-based image navigation
+- User settings at `~/.config/auraview/settings.json`
+- Dark/light theme and configurable GUI font
 - Image zoom with reset view shortcuts and Ctrl + mouse wheel
 - Ctrl + left-mouse drag panning for zoomed images
 - Mouse wheel, middle-button drag, and horizontal tilt-wheel canvas scrolling
@@ -56,6 +58,8 @@ Launch AuraView:
 ```bash
 auraview
 ````
+
+Launching without arguments opens an empty viewer. It no longer scans the current directory automatically.
 
 Open a specific directory:
 
@@ -106,4 +110,33 @@ Show release date:
 ```bash
 auraview --date
 auraview -d
+```
+
+### ⚙️ GUI Settings
+
+AuraView creates and reads user settings from:
+
+```bash
+~/.config/auraview/settings.json
+```
+
+Example:
+
+```json
+{
+    "ui": {
+        "font_family": "Arial",
+        "font_size": 12,
+        "tk_scaling": 1.0,
+        "window_width": 900,
+        "window_height": 700,
+        "theme": "dark"
+    }
+}
+```
+
+Supported themes are `dark` and `light`. You can also temporarily override these at launch:
+
+```bash
+auraview --theme light --font_family "DejaVu Sans" --font_size 13 --tk_scaling 1.1
 ```

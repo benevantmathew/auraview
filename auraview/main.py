@@ -33,6 +33,12 @@ def parse_arguments():
     parser.add_argument("-e", "--email", action="store_true")
     parser.add_argument("-d", "--date", action="store_true")
 
+    # UI settings overrides
+    parser.add_argument("--theme", choices=["dark", "light"])
+    parser.add_argument("--font_family", type=str)
+    parser.add_argument("--font_size", type=int)
+    parser.add_argument("--zoom", "--tk_scaling", dest="tk_scaling", type=float)
+
     # New logfile support
     parser.add_argument(
         "--logfile",
@@ -77,6 +83,13 @@ def main():
         print(f"Release Date {__release_date__}")
         sys.exit(0)
 
+    ui_options = {
+        "theme": args.theme,
+        "font_family": args.font_family,
+        "font_size": args.font_size,
+        "tk_scaling": args.tk_scaling,
+    }
+
     # --- Logfile mode ---
     if args.logfile:
         if not os.path.isfile(args.logfile):
@@ -86,20 +99,20 @@ def main():
         with open(args.logfile, "r") as f:
             files = [line.strip() for line in f if line.strip()]
 
-        obj = PhotoViewerGUI(files=files)
+        obj = PhotoViewerGUI(files=files, ui_options=ui_options)
         obj.run()
         return
 
     # --- Normal mode ---
     if args.path:
         if os.path.isdir(args.path):
-            obj=PhotoViewerGUI(loc=args.path)
+            obj=PhotoViewerGUI(loc=args.path, ui_options=ui_options)
             obj.run()
         else:
-            obj = PhotoViewerGUI(files=args.path)
+            obj = PhotoViewerGUI(files=args.path, ui_options=ui_options)
             obj.run()
     else:
-        obj = PhotoViewerGUI()
+        obj = PhotoViewerGUI(files=[], ui_options=ui_options)
         obj.run()
 
 
