@@ -4,6 +4,9 @@ auraview/gui/gui.py
 Author: Benevant Mathew
 Date: 2025-12-16
 """
+import os
+import shutil
+import subprocess
 import tkinter as tk
 from tkinter import filedialog
 from tkcalendar import Calendar
@@ -21,6 +24,20 @@ register_heif_opener()
 ZOOM_STEP = 1.25
 MIN_ZOOM = 0.1
 MAX_ZOOM = 8.0
+IMAGE_FILETYPES = [
+    ("Image files", "*.jpg *.jpeg *.png *.heic"),
+    ("JPEG files", "*.jpg *.jpeg"),
+    ("PNG files", "*.png"),
+    ("HEIC files", "*.heic"),
+    ("All files", "*.*"),
+]
+ZENITY_IMAGE_FILTERS = [
+    "Image files | *.jpg *.jpeg *.png *.heic",
+    "JPEG files | *.jpg *.jpeg",
+    "PNG files | *.png",
+    "HEIC files | *.heic",
+    "All files | *",
+]
 
 class PhotoViewerGUI:
     """
@@ -80,6 +97,81 @@ class PhotoViewerGUI:
         :param self: Description
         """
         self.root.mainloop()
+
+    def _zenity_available(self):
+        """Return True when zenity is available on PATH."""
+        return shutil.which("zenity") is not None
+
+    def _last_picker_dir(self):
+        """Return a stable initial directory for file/folder pickers."""
+        path = self.ui_settings.get("last_open_dir") or self.controller.loc
+        path = os.path.abspath(os.path.expanduser(str(path)))
+        if os.path.isfile(path):
+            path = os.path.dirname(path)
+        if not os.path.isdir(path):
+            path = os.path.expanduser("~")
+        return path
+
+    def _run_zenity_picker(self, args):
+        """Run zenity and return the selected path, or None on cancel/failure."""
+        try:
+            result = subprocess.run(
+                ["zenity", *args],
+                check=False,
+                capture_output=True,
+                text=True
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+
+        if result.returncode != 0:
+            return None
+
+        selected_path = result.stdout.strip().splitlines()[0] if result.stdout.strip() else ""
+        return selected_path or None
+
+    def _pick_image_file(self, title="Open Image"):
+        """Pick an image file with zenity when available, else Tk."""
+        initial_dir = self._last_picker_dir()
+        if self._zenity_available():
+            args = [
+                "--file-selection",
+                f"--title={title}",
+                f"--filename={initial_dir}{os.sep}",
+            ]
+            for file_filter in ZENITY_IMAGE_FILTERS:
+                args.append(f"--file-filter={file_filter}")
+            return self._run_zenity_picker(args)
+
+        return filedialog.askopenfilename(
+            title=title,
+            initialdir=initial_dir,
+            filetypes=IMAGE_FILETYPES
+        )
+
+    def _pick_directory(self, title="Choose Folder"):
+        """Pick a directory with zenity when available, else Tk."""
+        initial_dir = self._last_picker_dir()
+        if self._zenity_available():
+            return self._run_zenity_picker([
+                "--file-selection",
+                "--directory",
+                f"--title={title}",
+                f"--filename={initial_dir}{os.sep}",
+            ])
+
+        return filedialog.askdirectory(title=title, initialdir=initial_dir)
+
+    def _remember_picker_dir(self, path):
+        """Remember the last selected file/folder directory for this session."""
+        if not path:
+            return
+        path = os.path.abspath(os.path.expanduser(path))
+        if os.path.isfile(path):
+            path = os.path.dirname(path)
+        if os.path.isdir(path):
+            self.ui_settings["last_open_dir"] = path
+
     # -------------------------------------------------
     # Window Resize Handling
     # -------------------------------------------------
@@ -353,6 +445,30 @@ class PhotoViewerGUI:
         self.canvas_img.config(cursor="")
         return "break"
 
+    def _load_new_roll(self, files=None, loc='.', recursive=True):
+        """Replace the current picture roll and refresh the screen."""
+        self.controller = ImageController(files=files, loc=loc, recursive=recursive)
+        self.reset_view(update=False)
+        self.update_screen()
+
+    def open_image_file(self):
+        """Open an image file selected through the best available picker."""
+        path = self._pick_image_file()
+        if not path:
+            return
+        self._remember_picker_dir(path)
+        self._load_new_roll(files=path)
+
+    def open_folder(self, recursive=True):
+        """Open a directory selected through the best available picker."""
+        path = self._pick_directory(
+            title="Open Folder Recursively" if recursive else "Open Folder Non-Recursive"
+        )
+        if not path:
+            return
+        self._remember_picker_dir(path)
+        self._load_new_roll(loc=path, recursive=recursive)
+
     def rotate_image(self, direction):
         """
         Docstring for rotate_image
@@ -371,9 +487,10 @@ class PhotoViewerGUI:
         :param self: Description
         """
 
-        folder = filedialog.askdirectory()
+        folder = self._pick_directory(title="Move Image To Folder")
         if not folder:
             return
+        self._remember_picker_dir(folder)
 
         self.controller.move_current(folder)
         self.update_screen()
@@ -392,9 +509,10 @@ class PhotoViewerGUI:
         :param self: Description
         """
 
-        folder = filedialog.askdirectory()
+        folder = self._pick_directory(title="Copy Image To Folder")
         if not folder:
             return
+        self._remember_picker_dir(folder)
 
         self.controller.copy_current(folder)
         self.update_screen()
@@ -595,6 +713,30 @@ class PhotoViewerGUI:
         self.label_image_filecreationtime.grid(row=4, column=4)
 
         ## row 5
+        self.button_open_image = tk.Button(
+            self.main_frame,
+            text="Open Image",
+            command=self.open_image_file,
+            width=20
+        )
+        self.button_open_image.grid(row=5, column=0)
+
+        self.button_open_folder = tk.Button(
+            self.main_frame,
+            text="Open Folder",
+            command=lambda: self.open_folder(recursive=True),
+            width=20
+        )
+        self.button_open_folder.grid(row=5, column=1)
+
+        self.button_open_folder_non_recursive = tk.Button(
+            self.main_frame,
+            text="Open Non-Recursive",
+            command=lambda: self.open_folder(recursive=False),
+            width=20
+        )
+        self.button_open_folder_non_recursive.grid(row=5, column=2)
+
         # label15=tk.Label(self.main_frame,text=f'Selected Date : {self.date_var.get()}')
         # label15.grid(row=5, column=3)
 

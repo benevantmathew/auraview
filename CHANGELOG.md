@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 1.1.0 26-07-2026
+- Use Zenity for GUI file/folder pickers when available.
+- Add GUI buttons for Open Image, Open Folder, and Open Non-Recursive.
+- Keep file, recursive folder, and non-recursive folder picture-roll behavior available from the GUI.
+- Expand CLI help with detailed usage, picker behavior, shortcuts, and notes.
+
 ## Version 1.0.0 28-06-2026
 - Add image zoom controls with Ctrl+plus, Ctrl+minus, Ctrl+0 reset view shortcuts.
 - Add Ctrl+mouse-wheel zoom and Ctrl+middle-click reset view.
@@ -10,6 +16,7 @@
 - Add `~/.config/auraview/settings.json` with dark/light theme and GUI font settings.
 - Open an empty app when launched without arguments instead of scanning the current directory.
 - Keep file input as a folder picture roll and add `--non-recursive` for folder-only directory rolls.
+- Use Zenity for GUI file/folder pickers when available, falling back to Tk dialogs.
 - Add scrollable image canvas for zoomed images.
 
 ## Version 0.7.0 28-03-2026

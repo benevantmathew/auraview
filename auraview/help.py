@@ -78,6 +78,11 @@ Options:
         For folder input only, collect images directly inside that folder and
         skip subfolders.
 
+GUI file/folder picker:
+    When zenity is installed, AuraView uses zenity for Open Image, Open Folder,
+    Move, and Copy pickers. If zenity is not found, it falls back to Tk's native
+    dialogs.
+
 Theme and font options:
     AuraView reads persistent GUI settings from:
         ~/.config/auraview/settings.json

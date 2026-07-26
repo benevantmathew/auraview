@@ -41,6 +41,7 @@ It focuses on:
 - Copy images to another location
 - Move images between directories
 - Directory input loads images recursively by default; use `--non-recursive` to only load that folder
+- GUI open/move/copy pickers use Zenity when available, with Tk fallback
 
 ---
 
@@ -141,6 +142,8 @@ Example:
     }
 }
 ```
+
+The GUI file and folder pickers use `zenity` automatically when it is installed on Linux. If `zenity` is installed and you cancel it, AuraView treats that as a cancelled selection and does not open a Tk fallback. If `zenity` is not available, AuraView falls back to the built-in Tk dialogs.
 
 Supported themes are `dark` and `light`. You can also temporarily override these at launch:
 
